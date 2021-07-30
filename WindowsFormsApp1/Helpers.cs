@@ -17,10 +17,14 @@ namespace WindowsFormsApp1
             PropertyInfo[] propertyInfos = t.GetType().GetProperties();
             foreach (var pi in propertyInfos)
             {
+                var name = pi.Name;
+                if (!reader.HasColumnName(name))
+                    continue;
+
                 try
                 {
-                    var name = pi.Name;
                     var typeFullName = pi.PropertyType.FullName;
+
                     switch (typeFullName)
                     {
                         case "System.Int32":
@@ -70,6 +74,19 @@ namespace WindowsFormsApp1
                 default:
                     return false;
             }
+        }
+
+        private static bool HasColumnName(this SqlDataReader reader, string columnName)
+        {
+            bool isExistColumnName = false;
+            for (int i = 0; i < reader.FieldCount; i++)
+            {
+                var x = reader.GetName(i);
+                isExistColumnName = x == columnName;
+                if(isExistColumnName)
+                    break;
+            }
+            return isExistColumnName;
         }
     }
 }

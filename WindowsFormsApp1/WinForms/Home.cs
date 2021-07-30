@@ -22,16 +22,17 @@ namespace WindowsFormsApp1.WinForms
 
         private void GetData(object sender, EventArgs e)
         {
-            BloodDonatorsGridView.DataSource = BaseService<Doctor>.GetAll("SELECT * FROM Doctors");
+            //BloodDonatorsGridView.DataSource = BaseService<Doctor>.GetAll("SELECT * FROM Doctors");
+            BloodDonatorsGridView.DataSource = BaseService<Doctor>.GetAll("SELECT DoctorName, Designation FROM Doctors");
         }
 
         private void Home_Load(object sender, EventArgs e)
         {
-            var bloodGroups = BloodDonationService.GetBloodGroups();
-            foreach (var bg in bloodGroups)
-            {
-                BloodGroupCombobox.Items.Add(bg.BloodGroupName);
-            }
+            //var bloodGroups = BloodDonationService.GetBloodGroups();
+            //foreach (var bg in bloodGroups)
+            //{
+            //    BloodGroupCombobox.Items.Add(bg.BloodGroupName);
+            //}
 
             BloodDonatorsGridView.DataSource = BaseService<Doctor>.Get("SELECT * FROM Doctors WHERE Id=7");
         }
