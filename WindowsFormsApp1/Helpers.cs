@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,50 +12,60 @@ namespace WindowsFormsApp1
 {
     public static class Helpers
     {
-        public static T DataReaderToObjectMapper<T>(SqlDataReader reader) where T : class, new()
+        public static T DataReaderToObjectMapper<T>(SqlDataReader reader, [Optional] string query) where T : class, new()
         {
             T t = new T();
             PropertyInfo[] propertyInfos = t.GetType().GetProperties();
-            foreach (var pi in propertyInfos)
+            var assertions = AssertionFromQuery(query);
+            if (assertions.Count > 0)
             {
-                var name = pi.Name;
-                if (!reader.HasColumnName(name))
-                    continue;
-
-                try
+                foreach (KeyValuePair<string, string> kvp in assertions)
                 {
-                    var typeFullName = pi.PropertyType.FullName;
-
-                    switch (typeFullName)
+                    foreach (var pi in propertyInfos)
                     {
-                        case "System.Int32":
-                            pi.SetValue(t, Convert.ToInt32(reader[name].ToString()));
-                            break;
-                        case "System.Int64":
-                            pi.SetValue(t, Convert.ToInt64(reader[name].ToString()));
-                            break;
-                        case "System.String":
-                            pi.SetValue(t, reader[name].ToString());
-                            break;
-                        case "System.DateTime":
-                            pi.SetValue(t, Convert.ToDateTime(reader[name].ToString()));
-                            break;
-                        case "System.Boolean":
-                            pi.SetValue(t, ConvertToBoolean(reader[name].ToString()));
-                            break;
-                        default:
-                            break;
+                        var name = pi.Name;
+                        if(name == kvp.Key)
+                        {
+                            if (!reader.HasColumnName(kvp.Value))
+                                continue;
+                            PropInforToObj(pi, ref t, reader, kvp.Value, pi.PropertyType.FullName);
+                        }
                     }
                 }
-                catch (Exception ex)
+            }
+            else
+            {
+                foreach (var pi in propertyInfos)
                 {
-
-                    throw ex;
+                    var name = pi.Name;
+                    PropInforToObj(pi, ref t, reader, name, pi.PropertyType.FullName);
                 }
             }
             return t;
         }
-
+        private static void PropInforToObj<T>(PropertyInfo pi, ref T t, SqlDataReader reader, string readerIndexName, string conversionTypeName)
+        {
+            switch (conversionTypeName)
+            {
+                case "System.Int32":
+                    pi.SetValue(t, Convert.ToInt32(reader[readerIndexName].ToString()));
+                    break;
+                case "System.Int64":
+                    pi.SetValue(t, Convert.ToInt64(reader[readerIndexName].ToString()));
+                    break;
+                case "System.String":
+                    pi.SetValue(t, reader[readerIndexName].ToString());
+                    break;
+                case "System.DateTime":
+                    pi.SetValue(t, Convert.ToDateTime(reader[readerIndexName].ToString()));
+                    break;
+                case "System.Boolean":
+                    pi.SetValue(t, ConvertToBoolean(reader[readerIndexName].ToString()));
+                    break;
+                default:
+                    break;
+            }
+        }
         private static bool ConvertToBoolean(string input)
         {
             switch (input.ToLower())
@@ -75,7 +86,6 @@ namespace WindowsFormsApp1
                     return false;
             }
         }
-
         private static bool HasColumnName(this SqlDataReader reader, string columnName)
         {
             bool isExistColumnName = false;
@@ -87,6 +97,29 @@ namespace WindowsFormsApp1
                     break;
             }
             return isExistColumnName;
+        }
+        public static Dictionary<string,  string> AssertionFromQuery(string query)
+        {
+            Dictionary<string, string> names = new Dictionary<string, string>();
+            var isExistAs = query.Contains("AS");
+            if (isExistAs)
+            {
+                string[] assertions = query.Split(' ');
+                for (int i = 0; i < assertions.Length; i++)
+                {
+                    var assertion = assertions[i].ToLower();
+
+                    if (assertion == "as")
+                    {
+                        var a = assertions[i - 1].Trim();
+                        var b = assertions[i + 1].Trim();
+                        b = b.Contains(",") ? b.Replace(",", "") : b;
+                        names.Add(a, b);
+                    }
+                }
+            }
+
+            return names;
         }
     }
 }

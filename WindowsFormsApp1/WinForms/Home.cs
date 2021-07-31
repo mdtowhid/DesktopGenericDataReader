@@ -23,7 +23,10 @@ namespace WindowsFormsApp1.WinForms
         private void GetData(object sender, EventArgs e)
         {
             //BloodDonatorsGridView.DataSource = BaseService<Doctor>.GetAll("SELECT * FROM Doctors");
-            BloodDonatorsGridView.DataSource = BaseService<Doctor>.GetAll("SELECT DoctorName, Designation FROM Doctors");
+            //Helpers.AssertionFromQuery("SELECT DoctorName AS DN, Designation AS DG FROM Doctors");
+            //string[] assertions = new string[] { "dn", "dg" };
+            //BloodDonatorsGridView.DataSource = BaseService<Doctor>.GetAll("SELECT DoctorName AS DN, Designation AS DG FROM Doctors");
+            BloodDonatorsGridView.DataSource = BaseService<Doctor>.GetAll("SELECT DoctorName FROM Doctors");
         }
 
         private void Home_Load(object sender, EventArgs e)

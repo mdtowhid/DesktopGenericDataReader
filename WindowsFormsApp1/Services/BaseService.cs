@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using WindowsFormsApp1.Data;
@@ -33,7 +34,7 @@ namespace WindowsFormsApp1.Services
                 {
                     while (reader.Read())
                     {
-                        T t = Helpers.DataReaderToObjectMapper<T>(reader);
+                        T t = Helpers.DataReaderToObjectMapper<T>(reader, query);
                         objs.Add(t);
                     }
                 }
